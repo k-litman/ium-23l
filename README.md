@@ -1,6 +1,6 @@
 # IUM zadanie 07 wariant 02
 - Korneliusz Litman 310804
-- Marcin Zasuwa
+- Marcin Zasuwa 311022
 
 ## Kontekst:
 > W ramach projektu wcielamy się w rolę analityka pracującego dla portalu „Pozytywka” –serwisu muzycznego, który swoim użytkownikom pozwala na odtwarzanie ulubionych utworów online. Praca na tym stanowisku nie jest łatwa –zadanie dostajemy w formie enigmatycznego opisu i to do nas należy doprecyzowanie szczegółów tak, aby dało się je zrealizować. To oczywiście wymaga  zrozumienia  problemu,  przeanalizowania  danych,  czasami  negocjacji  z  szefostwem. Same  modele musimy skonstruować tak,  aby gotowe  były do  wdrożenia  produkcyjnego – pamiętając,  że  w  przyszłości  będą  pojawiać  się  kolejne  ich  wersje, z  którymi  będziemy eksperymentować.
@@ -17,12 +17,13 @@ Serwis muzyczny Pozytywka umożliwia użytkownikom odtwarzanie utworów. Firma z
 Opracowanie i wdrożenie modelu predykcyjnego, który na podstawie dostępnych danych i historii użytkowników, będzie w stanie przewidywać prawdopodobieństwo, że użytkownik odtworzy utwór w całości lub go przewinie.
 
 ### Biznesowe kryteria sukcesu
-wersja 0.0.1 sukcesu: optymalizacja kosztów i podziału slow/medium/Where cryteria
-wersja 0.0.2: dobry guess rate na zapytaniach utwór/timestamp? (doprecyzować na chatcie)
+#### Wariant 1
+- Zwiększenie satysfakcji użytkowników poprzez zmniejszenie czasu oczekiwania na załadowanie piosenek
+- Optymalizacja kosztów poprzez umieszczenie utworów w odpowiedniej klasie storage
 
-- wyższa wydajność cache'u XD
-- optymalizacja kosztów ?
-- poprawa doświadczeń użytkowników: dzięki szybszemu cache użytkownicy zyskują szybsze i bardziej płynne doświadczenia podczas odtwarzania utworów
+#### Wariant 2
+- Zwiększenie satysfakcji użytkowników poprzez rekomendowanie im piosenek, na które istnieje mniejsza szansa, że zostaną pominięte
+- Zmniejszenie procentowe pomijanych utworów co najmniej o 5%
 
 
 ## Definicja zadania / zadań modelowania i wszystkich założeń
@@ -37,11 +38,6 @@ Dostaliśmy dane składające się z 5 plików `jsonl`
 - `tracks.jsonl` zawiera informacje o utworach
 - `track_storage.jsonl` zawiera informacje o tym na jakich klasach pamięci są przechowywane utwory
 - `users.jsonl` zawiera informacje o użytkownikach portalu
-
-
-### Atrybuty danych
-
-
 
 
 #### Wstępne założenia
@@ -294,6 +290,8 @@ max: 1057.39 seconds
 std: 90.49 seconds
 
 ```
+- Procentowa liczba pominiętych utworów: `34.12%`
+
 Przygotowaliśmy histogram dla przedstawionych danych:
 ![](img/skip_histogram.png)
 

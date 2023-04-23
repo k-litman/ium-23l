@@ -176,16 +176,24 @@ Przygotowaliśmy kolejne histogramy dla kolejnych danych:
 
 Na podstawie przedstawionych histogramów możemy wnioskować, że nie wszystkie atrybuty niosą istotne informacje dla zadania.
 
+## Transformacja
+Aby uprościć strukturę danych, dane z pliku `sessions.jsonl` zostały poddane transformacji.
+Wyliczono następujące wartości:
+- `advertisementBefore` (określa czy bezpośrednio przed utworem została odtworzona reklama)
+- `skipped` (określa czy utwór został pominięty)
+- `likedWhilePlaying` (czy podczas odtwarzania utworu został on polubiony)
+
 ## Współczynniki korelacji dla atrubutów ciągłych
 ![](img/correlation.png)
 
-## Współczynnik informacji wzajemnej
-![](img/mutual.png)
-Po obliczeniu współczynnika informacji wzajemnej dostarczone dane nie niosą zbyt dużej informacji o zmiennej celu.
-Nawet największa wartość współczynnika informacji wzjamnej jest poniżej 2%.
+## Współczynniki informacji wzajemnej
+![](img/mutual.png) 
+
+Po obliczeniu współczynnika informacji wzajemnej między dostarczonymi danymi, a zmienną celu, wynika, że dostarczone dane nie niosą zbyt dużo informacji o zmiennej celu.
+Nawet największa wartość współczynnika informacji wzajemnej jest poniżej 2%.
 
 ## Wstępnie zdefiniowane danych wejściowych
-Przy wstępnej próbie użyto MLPClassifier. Okazało się, że na poprawę modelu w sposób dość znaczący wpływa personalizacja utworów pod użytkownika, na podstawie jego ulubionych gatunków muzycznych
+Przy wstępnej próbie użyto MLPClassifier okazało się, że na poprawę modelu w sposób dość znaczący wpływa personalizacja utworów pod użytkownika, na podstawie jego ulubionych gatunków muzycznych
 (`71.23%` vs `59.80%`).
 Istotne jest zatem uwzględnienie `favourite_genres`, `genres` w modelu.
-Pozostałe atrybuty nie niosą wiele informacji i nie wpływają w znaczący sposób na poprawę modelu.
+Większość innych atrybutów nie niesie wiele informacji i nie wpływa w znaczący sposób na poprawę modelu (potwierdza to wyznaczone wcześniej współczynniki informacji wzajemnych)

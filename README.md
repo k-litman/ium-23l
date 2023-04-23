@@ -19,12 +19,16 @@ Opracowanie i wdrożenie modelu predykcyjnego, który na podstawie dostępnych d
 ### Biznesowe kryteria sukcesu
 #### Wariant 1
 - Zwiększenie satysfakcji użytkowników poprzez zmniejszenie czasu oczekiwania na załadowanie piosenek
-- Optymalizacja kosztów poprzez umieszczenie utworów w odpowiedniej klasie storage
+- Priorytetyzowanie cachowania piosenek, które mają większe prawdopodobieństwo, że zostaną odtworzone w całości
 
 #### Wariant 2
 - Zwiększenie satysfakcji użytkowników poprzez rekomendowanie im piosenek, na które istnieje mniejsza szansa, że zostaną pominięte
 - Zmniejszenie procentowe pomijanych utworów co najmniej o 5%
 
+### Analityczne kryteria sukcesu
+Naiwny model, który zawsze przewiduje, że utwór zostanie odtworzony w całości, osiągnie wynik zbliżony do `65.88%` dokładności.
+Wynika to z tego, że w dostarczonym zbiorze danych `65.88%` utworów zostało odtworzonych w całości.
+Celem jest stworzenie predykcyjnego modelu, który przewiduje z dokładnością wyższą niż `65.88%` prawdopodobieństwo czy utwór zostanie odtworzony w całości, czy zostanie pominięty.
 
 ## Definicja zadania / zadań modelowania i wszystkich założeń
 Zadania modelowania: Model predykcyjny, który na podstawie dostarczonych danych będzie w stanie przewidzieć, czy utwór zostanie odtworzony w całości, czy zostanie przewinięty.
@@ -172,5 +176,16 @@ Przygotowaliśmy kolejne histogramy dla kolejnych danych:
 
 Na podstawie przedstawionych histogramów możemy wnioskować, że nie wszystkie atrybuty niosą istotne informacje dla zadania.
 
+## Współczynniki korelacji dla atrubutów ciągłych
+![](img/correlation.png)
 
+## Współczynnik informacji wzajemnej
+![](img/mutual.png)
+Po obliczeniu współczynnika informacji wzajemnej dostarczone dane nie niosą zbyt dużej informacji o zmiennej celu.
+Nawet największa wartość współczynnika informacji wzjamnej jest poniżej 2%.
 
+## Wstępnie zdefiniowane danych wejściowych
+Przy wstępnej próbie użyto MLPClassifier. Okazało się, że na poprawę modelu w sposób dość znaczący wpływa personalizacja utworów pod użytkownika, na podstawie jego ulubionych gatunków muzycznych
+(`71.23%` vs `59.80%`).
+Istotne jest zatem uwzględnienie `favourite_genres`, `genres` w modelu.
+Pozostałe atrybuty nie niosą wiele informacji i nie wpływają w znaczący sposób na poprawę modelu.

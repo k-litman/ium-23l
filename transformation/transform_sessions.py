@@ -1,14 +1,13 @@
-from datetime import datetime
 import json
-INPUT_FILE = '../data/v2/sessions.jsonl'
-OUTPUT_FILE = '../data/v2/sessions_transformed.jsonl'
+from datetime import datetime
+
+INPUT_FILE = '../data/v3/sessions.jsonl'
+OUTPUT_FILE = '../data/v3/sessions_transformed.jsonl'
 
 with open(INPUT_FILE) as f:
     lines = f.readlines()
 
 tracks = {}
-
-
 
 with open(INPUT_FILE) as f:
     lines = f.readlines()

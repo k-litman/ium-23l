@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from imblearn.over_sampling import SMOTE
 from scipy.sparse import issparse
-from scipy.spatial.distance import euclidean
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -13,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
 
 DATA_ROOT = 'data/v3/'
-MODEL_ROOT = 'model/'
+MODEL_ROOT = 'model2/'
 
 
 def read_jsonl(file_path):
@@ -78,18 +77,15 @@ for genre, label, feature in zip(unique_genres, labels, vectorized):
 # Define the function to get the most representative genre
 def get_representative_genre(cluster):
     centroid = kmeans.cluster_centers_[cluster]
-    min_distance = float('inf')
-    representative_genre = None
+    points = np.array([point for _, point in clustered_genres[cluster]])
 
-    for genre, point in clustered_genres[cluster]:
-        if issparse(point):
-            point = point.toarray()[0]  # Convert to dense array if sparse
-        distance = euclidean(point, centroid)
-        if distance < min_distance:
-            min_distance = distance
-            representative_genre = genre
+    if issparse(points[0]):
+        points = np.array([point.toarray()[0] for point in points])  # Convert to dense array if sparse
 
-    return representative_genre
+    distances = np.linalg.norm(points - centroid, axis=1)
+    min_index = np.argmin(distances)
+
+    return clustered_genres[cluster][min_index][0]
 
 
 # Map genres to their cluster label
@@ -103,12 +99,17 @@ def map_genre(genre):
     return representative_genre
 
 
+print("started mapping for genres")
 # Apply the mapping function to both 'genres' and 'favourite_genres' columns
 merged_df['genres'] = merged_df['genres'].apply(lambda x: [map_genre(genre) for genre in x])
+print("genres mapped")
 merged_df['favourite_genres'] = merged_df['favourite_genres'].apply(lambda x: [map_genre(genre) for genre in x])
+print("favourite genres mapped")
 
+print("deleting not unique genres")
 # Delete not unique genres
 merged_df['genres'] = merged_df['genres'].apply(lambda x: list(set(x)))
+print("deleting not unique favourite genres")
 merged_df['favourite_genres'] = merged_df['favourite_genres'].apply(lambda x: list(set(x)))
 
 # Wyświetl wyniki

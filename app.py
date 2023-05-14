@@ -76,12 +76,13 @@ class PredictRequest(BaseModel):
     favourite_genres: List[str]
 
 
+artists_df = read_jsonl(DATA_ROOT + "artists.jsonl")
+track_storage_df = read_jsonl(DATA_ROOT + "track_storage.jsonl")
+tracks_df = read_jsonl(DATA_ROOT + "tracks.jsonl")
+
+
 def process_input_data(track_id: str, favourite_genres: List[str], mlb_genres: MultiLabelBinarizer,
                        mlb_favourite_genres: MultiLabelBinarizer, scaler: StandardScaler):
-    artists_df = read_jsonl(DATA_ROOT + "artists.jsonl")
-    track_storage_df = read_jsonl(DATA_ROOT + "track_storage.jsonl")
-    tracks_df = read_jsonl(DATA_ROOT + "tracks.jsonl")
-
     track_data = tracks_df.loc[tracks_df['id'] == track_id]
     track_data.rename(columns={'id': 'track_id'}, inplace=True)
 

@@ -5,28 +5,26 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import accuracy_score
 
-# device = torch.device('cuda:0')
-device = torch.device('cpu')
-
-MODEL_ROOT = 'model2/'
+MODEL_ROOT = 'model/simple/'
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Load the data
-with open(MODEL_ROOT + 'X_resampled.pkl', 'rb') as f:
+with open(MODEL_ROOT + 'resampled_train_features.pkl', 'rb') as f:
     X_resampled = pickle.load(f)
 
-with open(MODEL_ROOT + 'y_resampled.pkl', 'rb') as f:
+with open(MODEL_ROOT + 'resampled_train_labels.pkl', 'rb') as f:
     y_resampled = pickle.load(f)
 
-with open(MODEL_ROOT + 'X.pkl', 'rb') as f:
+with open(MODEL_ROOT + 'feature_matrix.pkl', 'rb') as f:
     X = pickle.load(f)
 
-with open(MODEL_ROOT + 'X_test_scaled.pkl', 'rb') as f:
+with open(MODEL_ROOT + 'test_features_scaled.pkl', 'rb') as f:
     X_test_scaled = pickle.load(f)
 
-with open(MODEL_ROOT + 'y_train.pkl', 'rb') as f:
+with open(MODEL_ROOT + 'train_labels.pkl', 'rb') as f:
     y_train = pickle.load(f)
 
-with open(MODEL_ROOT + 'y_test.pkl', 'rb') as f:
+with open(MODEL_ROOT + 'test_labels.pkl', 'rb') as f:
     y_test = pickle.load(f)
 
 

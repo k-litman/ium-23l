@@ -5,10 +5,10 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import accuracy_score
 
-device = torch.device('cuda:0')
-# device = torch.device('cpu')
+# device = torch.device('cuda:0')
+device = torch.device('cpu')
 
-MODEL_ROOT = 'model/'
+MODEL_ROOT = 'model2/'
 
 # Load the data
 with open(MODEL_ROOT + 'X_resampled.pkl', 'rb') as f:

@@ -1,7 +1,7 @@
 import json
 
 
-DATA_ROOT = '../data/v2/'
+DATA_ROOT = '../data/v3/'
 
 plays = 0
 skips = 0

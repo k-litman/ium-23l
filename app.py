@@ -1,14 +1,16 @@
 import pickle
 from typing import List
 
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from fastapi import FastAPI
 from jsonlines import jsonlines
 from pydantic import BaseModel
-import pandas as pd
-import numpy as np
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
+
+from utils import map_genre
 
 
 class MLPClassifierPytorch(nn.Module):
@@ -25,19 +27,34 @@ class MLPClassifierPytorch(nn.Module):
         return x
 
 
-MODEL_ROOT = 'model/'
-# Load input_size from a file
+MODEL_ROOT = 'model2/'
+
 with open(MODEL_ROOT + "input_size.txt", "r") as f:
     input_size = int(f.read())
 
-with open(MODEL_ROOT + "mlb.pkl", "rb") as f:
-    mlb = pickle.load(f)
+with open(MODEL_ROOT + "mlb_genres.pkl", "rb") as f:
+    mlb_genres = pickle.load(f)
+
+with open(MODEL_ROOT + "mlb_favourite_genres.pkl", "rb") as f:
+    mlb_favourite_genres = pickle.load(f)
 
 with open(MODEL_ROOT + "scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
-with open(MODEL_ROOT + "columns.pkl", "rb") as f:
-    model_columns = pickle.load(f)
+with open(MODEL_ROOT + "vectorizer.pkl", "rb") as f:
+    vectorizer = pickle.load(f)
+
+with open(MODEL_ROOT + "pca.pkl", "rb") as f:
+    pca = pickle.load(f)
+
+with open(MODEL_ROOT + "genre_to_cluster.pkl", "rb") as f:
+    genre_to_cluster = pickle.load(f)
+
+with open(MODEL_ROOT + "kmeans.pkl", "rb") as f:
+    kmeans = pickle.load(f)
+
+with open(MODEL_ROOT + "clustered_genres.pkl", "rb") as f:
+    clustered_genres = pickle.load(f)
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 model = MLPClassifierPytorch(input_size).to(device)
@@ -62,8 +79,8 @@ class PredictRequest(BaseModel):
     favourite_genres: List[str]
 
 
-def process_input_data(track_id: str, favourite_genres: List[str], mlb: MultiLabelBinarizer, scaler: StandardScaler,
-                       model_columns):
+def process_input_data(track_id: str, favourite_genres: List[str], mlb_genres: MultiLabelBinarizer,
+                       mlb_favourite_genres: MultiLabelBinarizer, scaler: StandardScaler):
     # Load the required data
     artists_df = read_jsonl(DATA_ROOT + "artists.jsonl")
     track_storage_df = read_jsonl(DATA_ROOT + "track_storage.jsonl")
@@ -71,42 +88,44 @@ def process_input_data(track_id: str, favourite_genres: List[str], mlb: MultiLab
 
     # Get the track data for the given track_id
     track_data = tracks_df.loc[tracks_df['id'] == track_id]
-
     track_data.rename(columns={'id': 'track_id'}, inplace=True)
 
     # Merge the track data with track_storage and artists data
     track_data = track_data.merge(track_storage_df, on="track_id", how="left")
     track_data = track_data.merge(artists_df, left_on="id_artist", right_on="id", how="left", suffixes=("", "_artist"))
 
-    # Binarize the genres
-    genres_binarized = mlb.transform(track_data['genres'])
-    genres_df = pd.DataFrame(genres_binarized, columns=mlb.classes_)
-    genres_df.columns = "genre_" + genres_df.columns
+    # Create a dataframe that matches the input format
+    new_data = pd.DataFrame(
+        {'track_id': [track_id], 'genres': [track_data['genres'].values[0]], 'favourite_genres': [favourite_genres]})
 
-    # Binarize the favourite_genres
-    fav_genres_binarized = mlb.transform([favourite_genres])
-    fav_genres_df = pd.DataFrame(fav_genres_binarized, columns="favourite_genre_" + mlb.classes_)
+    # Apply the genre mapping function
+    new_data['genres'] = new_data['genres'].apply(
+        lambda x: [map_genre(genre, genre_to_cluster, kmeans, clustered_genres) for genre in x])
+    new_data['favourite_genres'] = new_data['favourite_genres'].apply(
+        lambda x: [map_genre(genre, genre_to_cluster, kmeans, clustered_genres) for genre in x])
 
-    # Create a DataFrame with the structure of model_columns filled with zeros
-    input_data = pd.DataFrame(columns=model_columns, data=np.zeros((1, len(model_columns))))
+    # Remove non-unique genres
+    new_data['genres'] = new_data['genres'].apply(lambda x: list(set(x)))
+    new_data['favourite_genres'] = new_data['favourite_genres'].apply(lambda x: list(set(x)))
 
-    # Update the input_data with the information from track_data, genres_df, and fav_genres_df
-    for col in genres_df.columns:
-        input_data[col] = genres_df[col].values[0]
+    # Perform the MultiLabelBinarizer transformation on 'genres' and 'favourite_genres' columns
+    new_X_genres = mlb_genres.transform(new_data['genres'])
+    new_X_favourite_genres = mlb_favourite_genres.transform(new_data['favourite_genres'])
 
-    for col in fav_genres_df.columns:
-        input_data[col] = fav_genres_df[col].values[0]
+    # Combine the transformed columns into one NumPy array
+    new_X = np.hstack((new_X_genres, new_X_favourite_genres))
 
-    # Scale the DataFrame
-    scaled_data = scaler.transform(input_data)
+    # Now you can use the StandardScaler
+    new_X_scaled = scaler.transform(new_X)
 
-    return scaled_data
+    return new_X_scaled
 
 
 @app.post("/predict-skipped")
 async def predict_skipped(request: PredictRequest):
     # Process the input data using the new function
-    input_data = process_input_data(request.track_id, request.favourite_genres, mlb, scaler, model_columns)
+    input_data = process_input_data(request.track_id, request.favourite_genres, mlb_genres, mlb_favourite_genres,
+                                    scaler)
 
     # Convert the input data to a PyTorch tensor
     input_tensor = torch.tensor(input_data, dtype=torch.float).to(device)

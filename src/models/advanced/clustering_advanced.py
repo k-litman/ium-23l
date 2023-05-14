@@ -10,10 +10,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
 
-from utils_simple import map_genre
+from utils_advanced import map_genre
 
 DATA_ROOT = 'data/v2/'
-MODEL_ROOT = 'model/simple/'
+MODEL_ROOT = 'model/advanced/'
 
 
 def load_data(file_path):
@@ -38,7 +38,7 @@ merged_data = merged_data.merge(artists, left_on="id_artist", right_on="id", how
 merged_data = merged_data.merge(track_storage, on="track_id", how="left")
 merged_data = merged_data.merge(users, on="user_id", how="left")
 
-selected_columns = ['skipped', 'genres', 'favourite_genres']
+selected_columns = ['skipped', 'genres', 'favourite_genres', 'duration_ms']
 unnecessary_columns = list(set(merged_data.columns.tolist()) - set(selected_columns))
 merged_data = merged_data.drop(unnecessary_columns, axis=1)
 
@@ -83,7 +83,7 @@ transformed_genres = multi_label_binarizer_genres.fit_transform(merged_data['gen
 transformed_favourite_genres = multi_label_binarizer_favourite_genres.fit_transform(merged_data['favourite_genres'])
 
 # Combine the transformed columns into a single NumPy array
-feature_matrix = np.hstack((transformed_genres, transformed_favourite_genres))
+feature_matrix = np.hstack((transformed_genres, transformed_favourite_genres, merged_data[['duration_ms']]))
 
 train_features, test_features, train_labels, test_labels = train_test_split(feature_matrix, labels, test_size=0.2,
                                                                             random_state=42)

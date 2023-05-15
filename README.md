@@ -2,6 +2,8 @@
 - Korneliusz Litman 310804
 - Marcin Zasuwa 311022
 
+# Etap 1
+
 ## Kontekst:
 > W ramach projektu wcielamy się w rolę analityka pracującego dla portalu „Pozytywka” –serwisu muzycznego, który swoim użytkownikom pozwala na odtwarzanie ulubionych utworów online. Praca na tym stanowisku nie jest łatwa –zadanie dostajemy w formie enigmatycznego opisu i to do nas należy doprecyzowanie szczegółów tak, aby dało się je zrealizować. To oczywiście wymaga  zrozumienia  problemu,  przeanalizowania  danych,  czasami  negocjacji  z  szefostwem. Same  modele musimy skonstruować tak,  aby gotowe  były do  wdrożenia  produkcyjnego – pamiętając,  że  w  przyszłości  będą  pojawiać  się  kolejne  ich  wersje, z  którymi  będziemy eksperymentować.
 
@@ -197,3 +199,87 @@ Przy wstępnej próbie użyto MLPClassifier okazało się, że na poprawę model
 (`71.23%` vs `59.80%`).
 Istotne jest zatem uwzględnienie `favourite_genres`, `genres` w modelu.
 Większość innych atrybutów nie niesie wiele informacji i nie wpływa w znaczący sposób na poprawę modelu (potwierdza to wyznaczone wcześniej współczynniki informacji wzajemnych)
+
+
+# Etap 2
+
+## Modele
+- Modele zostały przygotowane w języku Python z wykorzystaniem PyTorch.
+- Modele są oparte o perceptrony wielowarstwowe (MLP)
+- Do trenowania modeli wykorzystano rdzenie CUDA w GPU Nvidia.
+
+### Proces budowy modelów
+#### Przygotowanie danych
+Za pomocą skryptu `transform_sessions.py` dane zostały przeformatowane do uproszczonej postaci. Zawiera ona etykietę mówiącą o tym czy utwór został pominięty, czy nie
+#### Etapy przygotowania danych do trenowania
+- Wczytanie danych z plików wejściowych
+- Łączenie danych w jeden duży zestaw danych
+- Wektoryzacja tekstu na liczby za pomocą mechanizmu TF-IDF
+- Redukcja wymiarowości za pomocą PCA (Principal Component Analysis)
+- Klasteryzacja danych za pomocą algorytmu KMeans
+- Kodowanie danych One-hot
+- Podział danych na zbiór treningowy i testowy
+- Normalizacja danych za pomocą StandardScaler
+- Przepróbkowanie danych za pomocą SMOTE (Synthetic Minority Oversampling Technique) aby zrównoważyć klasę mniejszościową w zestawie danych
+
+
+### Opis budowy modeli
+- Są to modele złożone z  3 warstw
+  - Pierwsza warstwa: 50 neuronów, Funkcja aktywacji: ReLU
+  - Druga warstwa: 30 neuronów, Funkcja aktywacji: ReLU
+  - Trzecia warstwa: 2 neurony
+- CrossEntropyLoss i optimizer Adam
+- 1000 epok
+
+## Modele
+### Simple
+Przewiduje czy utwór zostanie pominięty czy nie tylko na podstawie favourite_genres użytkownika i genres utworu
+
+### Advanced
+Przewiduje czy utwór zostanie pomięty czy nie na podstawie favourite_genres użytkownika, genres utworu oraz dodatkowych informacji.
+
+TODO KORNEL DODAĆ WIĘCEJ ATRYBUTÓW OPRÓCZ DURATION_MS
+
+
+### Porównanie modeli
+TODO KORNEL OBLICZYĆ ACCURACY jednego i drugiego modelu i napisać
+
+
+
+#### Inne próby
+##### RandomForest i GradientBoosting
+Próby z wykorzystaniem RandomForest i GradientBoosting nie przyniosły zadowalających rezultatów. Ponieważ wykorzystywane trenowanie na CPU ich trenowanie trwało dużo dłużej
+
+
+## Mikroserwis
+Mikroserwis został zaimplementowany w języku Python z wykorzystaniem FastAPI. Jest on udostępniony jako obraz Dockerowy.
+
+### Endpointy
+
+#### Predykcja z wykorzystaniem konkretnej wersji modelu
+`POST /models/{model_name}/predict`, gdzie model_name `simple` lub `advanced`
+
+Przykładowe request body:
+```json
+{
+    "track_id": "0qGcYAUhkokluTCAuLUSdY",
+    "favourite_genres": [
+        "argentine rock"
+    ]
+}
+```
+Przykładowy response:
+```json
+{
+    "skipped": false
+}
+```
+
+#### Predykcja z wykorzystaniem losowej wersji modelu do przeprowadzenia testów A/B
+`POST /models/predict`
+Informacje o predykcji są zapisane do dokumentowej bazy danych MongoDB.
+Dane te mogą posłużyć do późniejszej oceny jakości modeli.
+
+
+### Prezentacja działania mikroserwisu
+![](img/microservice.png)

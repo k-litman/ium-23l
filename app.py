@@ -1,11 +1,12 @@
 import pickle
+import random
 from typing import List
 
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from jsonlines import jsonlines
 from pydantic import BaseModel
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
@@ -53,12 +54,12 @@ with open(MODEL_SIMPLE_ROOT + "kmeans.pkl", "rb") as f:
 
 with open(MODEL_SIMPLE_ROOT + "clustered_genres.pkl", "rb") as f:
     simple_clustered_genres = pickle.load(f)
-    
+
 simple_model = MLPClassifierPytorch(simple_input_size).to(device)
 simple_model.load_state_dict(torch.load(MODEL_SIMPLE_ROOT + "mlp_model.pth"))
 simple_model.eval()
 
-MODEL_ADVANCED_ROOT = 'model/simple/'
+MODEL_ADVANCED_ROOT = 'model/advanced/'
 with open(MODEL_ADVANCED_ROOT + "input_size.txt", "r") as f:
     advanced_input_size = int(f.read())
 
@@ -83,8 +84,8 @@ with open(MODEL_ADVANCED_ROOT + "kmeans.pkl", "rb") as f:
 with open(MODEL_ADVANCED_ROOT + "clustered_genres.pkl", "rb") as f:
     advanced_clustered_genres = pickle.load(f)
 
-advanced_model = MLPClassifierPytorch(simple_input_size).to(device)
-advanced_model.load_state_dict(torch.load(MODEL_SIMPLE_ROOT + "mlp_model.pth"))
+advanced_model = MLPClassifierPytorch(advanced_input_size).to(device)
+advanced_model.load_state_dict(torch.load(MODEL_ADVANCED_ROOT + "mlp_model.pth"))
 advanced_model.eval()
 
 app = FastAPI()
@@ -132,14 +133,15 @@ def process_input_simple(track_id: str, favourite_genres: List[str], mlb_genres:
     new_X_genres = mlb_genres.transform(new_data['genres'])
     new_X_favourite_genres = mlb_favourite_genres.transform(new_data['favourite_genres'])
 
-    new_X = np.hstack((new_X_genres, new_X_favourite_genres, new_data[['duration_ms']]))
+    new_X = np.hstack((new_X_genres, new_X_favourite_genres))
 
     new_X_scaled = scaler.transform(new_X)
 
     return new_X_scaled
 
+
 def process_input_advanced(track_id: str, favourite_genres: List[str], mlb_genres: MultiLabelBinarizer,
-                         mlb_favourite_genres: MultiLabelBinarizer, scaler: StandardScaler):
+                           mlb_favourite_genres: MultiLabelBinarizer, scaler: StandardScaler):
     track_data = tracks_df.loc[tracks_df['id'] == track_id]
     track_data.rename(columns={'id': 'track_id'}, inplace=True)
 
@@ -148,13 +150,13 @@ def process_input_advanced(track_id: str, favourite_genres: List[str], mlb_genre
 
     new_data = pd.DataFrame(
         {'track_id': [track_id], 'genres': [track_data['genres'].values[0]], 'favourite_genres': [favourite_genres],
-         'duration_ms': track_data['duration_ms']
+         'duration_ms': [track_data['duration_ms'].values[0]]
          })
 
     new_data['genres'] = new_data['genres'].apply(
-        lambda x: [map_genre(genre, simple_genre_to_cluster, simple_kmeans, simple_clustered_genres) for genre in x])
+        lambda x: [map_genre(genre, advanced_genre_to_cluster, advanced_kmeans, advanced_clustered_genres) for genre in x])
     new_data['favourite_genres'] = new_data['favourite_genres'].apply(
-        lambda x: [map_genre(genre, simple_genre_to_cluster, simple_kmeans, simple_clustered_genres) for genre in x])
+        lambda x: [map_genre(genre, advanced_genre_to_cluster, advanced_kmeans, advanced_clustered_genres) for genre in x])
 
     new_data['genres'] = new_data['genres'].apply(lambda x: list(set(x)))
     new_data['favourite_genres'] = new_data['favourite_genres'].apply(lambda x: list(set(x)))
@@ -169,9 +171,29 @@ def process_input_advanced(track_id: str, favourite_genres: List[str], mlb_genre
     return new_X_scaled
 
 
-@app.post("/predict-skipped")
-async def predict_skipped(request: PredictRequest):
-    input_data = process_input_simple(request.track_id, request.favourite_genres, simple_mlb_genres, simple_mlb_favourite_genres,
+@app.post("/models/{model_name}/predict")
+async def predict_skipped_with_specified_model(model_name, request: PredictRequest):
+    if model_name == "simple":
+        return predict_simple(request)
+    elif model_name == "advanced":
+        return predict_advanced(request)
+    else:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+
+@app.post("/models/predict")
+async def predict_skipped_with_specified_model(request: PredictRequest):
+    if random.randrange(0, 2):
+        print("predicting using simple model")
+        return predict_simple(request)
+    else:
+        print("predicting using advanced model")
+        return predict_advanced(request)
+
+
+def predict_simple(request):
+    input_data = process_input_simple(request.track_id, request.favourite_genres, simple_mlb_genres,
+                                      simple_mlb_favourite_genres,
                                       simple_scaler)
     input_tensor = torch.tensor(input_data, dtype=torch.float).to(device)
 
@@ -181,10 +203,11 @@ async def predict_skipped(request: PredictRequest):
 
     return {"skipped": bool(prediction)}
 
-@app.post("/predict-skipped-advanced")
-async def predict_skipped(request: PredictRequest):
-    input_data = process_input_advanced(request.track_id, request.favourite_genres, advanced_mlb_genres, advanced_mlb_favourite_genres,
-                                      advanced_scaler)
+
+def predict_advanced(request):
+    input_data = process_input_advanced(request.track_id, request.favourite_genres, advanced_mlb_genres,
+                                        advanced_mlb_favourite_genres,
+                                        advanced_scaler)
     input_tensor = torch.tensor(input_data, dtype=torch.float).to(device)
 
     with torch.no_grad():

@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import accuracy_score
 
-MODEL_ROOT = 'model/simple/'
+MODEL_ROOT = '../../../model/simple/'
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Load the data

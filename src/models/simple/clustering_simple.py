@@ -12,8 +12,8 @@ from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
 
 from utils_simple import map_genre
 
-DATA_ROOT = 'data/v2/'
-MODEL_ROOT = 'model/simple/'
+DATA_ROOT = '../../../data/v2/'
+MODEL_ROOT = '../../../model/simple/'
 
 
 def load_data(file_path):

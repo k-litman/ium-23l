@@ -150,7 +150,19 @@ def process_input_advanced(track_id: str, favourite_genres: List[str], mlb_genre
 
     new_data = pd.DataFrame(
         {'track_id': [track_id], 'genres': [track_data['genres'].values[0]], 'favourite_genres': [favourite_genres],
-         'duration_ms': [track_data['duration_ms'].values[0]]
+         'duration_ms': [track_data['duration_ms'].values[0]],
+            'popularity': [track_data['popularity'].values[0]],
+            'explicit': [track_data['explicit'].values[0]],
+            'danceability': [track_data['danceability'].values[0]],
+            'energy': [track_data['energy'].values[0]],
+            'key': [track_data['key'].values[0]],
+            'loudness': [track_data['loudness'].values[0]],
+            'speechiness': [track_data['speechiness'].values[0]],
+            'acousticness': [track_data['acousticness'].values[0]],
+            'instrumentalness': [track_data['instrumentalness'].values[0]],
+            'liveness': [track_data['liveness'].values[0]],
+            'valence': [track_data['valence'].values[0]],
+            'tempo': [track_data['tempo'].values[0]]
          })
 
     new_data['genres'] = new_data['genres'].apply(
@@ -164,7 +176,23 @@ def process_input_advanced(track_id: str, favourite_genres: List[str], mlb_genre
     new_X_genres = mlb_genres.transform(new_data['genres'])
     new_X_favourite_genres = mlb_favourite_genres.transform(new_data['favourite_genres'])
 
-    new_X = np.hstack((new_X_genres, new_X_favourite_genres, new_data[['duration_ms']]))
+    new_X = np.hstack((
+        new_X_genres,
+        new_X_favourite_genres,
+        new_data[['duration_ms']],
+        new_data[['popularity']],
+        new_data[['explicit']],
+        new_data[['danceability']],
+        new_data[['energy']],
+        new_data[['key']],
+        new_data[['loudness']],
+        new_data[['speechiness']],
+        new_data[['acousticness']],
+        new_data[['instrumentalness']],
+        new_data[['liveness']],
+        new_data[['valence']],
+        new_data[['tempo']]
+    ))
 
     new_X_scaled = scaler.transform(new_X)
 

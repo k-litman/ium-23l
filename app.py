@@ -16,9 +16,9 @@ from src.models.simple.utils_simple import map_genre
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-class MLPClassifierPytorch(nn.Module):
+class MLPClassifierSimplePytorch(nn.Module):
     def __init__(self, input_size):
-        super(MLPClassifierPytorch, self).__init__()
+        super(MLPClassifierSimplePytorch, self).__init__()
         self.layer1 = nn.Linear(input_size, 50)
         self.layer2 = nn.Linear(50, 30)
         self.layer3 = nn.Linear(30, 2)
@@ -27,6 +27,26 @@ class MLPClassifierPytorch(nn.Module):
         x = torch.relu(self.layer1(x))
         x = torch.relu(self.layer2(x))
         x = self.layer3(x)
+        return x
+
+
+class MLPClassifierAdvancedPytorch(nn.Module):
+    def __init__(self, input_size):
+        super(MLPClassifierAdvancedPytorch, self).__init__()
+        self.layer1 = nn.Linear(input_size, 100)
+        self.dropout1 = nn.Dropout(0.5)
+        self.layer2 = nn.Linear(100, 50)
+        self.dropout2 = nn.Dropout(0.5)
+        self.layer3 = nn.Linear(50, 30)
+        self.layer4 = nn.Linear(30, 2)
+
+    def forward(self, x):
+        x = torch.relu(self.layer1(x))
+        x = self.dropout1(x)
+        x = torch.relu(self.layer2(x))
+        x = self.dropout2(x)
+        x = torch.relu(self.layer3(x))
+        x = self.layer4(x)
         return x
 
 
@@ -55,7 +75,7 @@ with open(MODEL_SIMPLE_ROOT + "kmeans.pkl", "rb") as f:
 with open(MODEL_SIMPLE_ROOT + "clustered_genres.pkl", "rb") as f:
     simple_clustered_genres = pickle.load(f)
 
-simple_model = MLPClassifierPytorch(simple_input_size).to(device)
+simple_model = MLPClassifierSimplePytorch(simple_input_size).to(device)
 simple_model.load_state_dict(torch.load(MODEL_SIMPLE_ROOT + "mlp_model.pth"))
 simple_model.eval()
 
@@ -84,7 +104,7 @@ with open(MODEL_ADVANCED_ROOT + "kmeans.pkl", "rb") as f:
 with open(MODEL_ADVANCED_ROOT + "clustered_genres.pkl", "rb") as f:
     advanced_clustered_genres = pickle.load(f)
 
-advanced_model = MLPClassifierPytorch(advanced_input_size).to(device)
+advanced_model = MLPClassifierAdvancedPytorch(advanced_input_size).to(device)
 advanced_model.load_state_dict(torch.load(MODEL_ADVANCED_ROOT + "mlp_model.pth"))
 advanced_model.eval()
 

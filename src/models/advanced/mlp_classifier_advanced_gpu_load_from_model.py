@@ -31,20 +31,27 @@ with open(MODEL_ROOT + 'test_labels.pkl', 'rb') as f:
 class MLPClassifierPytorch(nn.Module):
     def __init__(self):
         super(MLPClassifierPytorch, self).__init__()
-        self.layer1 = nn.Linear(X.shape[1], 50)
-        self.layer2 = nn.Linear(50, 30)
-        self.layer3 = nn.Linear(30, 2)
+        self.layer1 = nn.Linear(X.shape[1], 100)
+        self.dropout1 = nn.Dropout(0.5)
+        self.layer2 = nn.Linear(100, 50)
+        self.dropout2 = nn.Dropout(0.5)
+        self.layer3 = nn.Linear(50, 30)
+        self.layer4 = nn.Linear(30, 2)
 
     def forward(self, x):
         x = torch.relu(self.layer1(x))
+        x = self.dropout1(x)
         x = torch.relu(self.layer2(x))
-        x = self.layer3(x)
+        x = self.dropout2(x)
+        x = torch.relu(self.layer3(x))
+        x = self.layer4(x)
         return x
 
 
 mlp = MLPClassifierPytorch().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(mlp.parameters(), lr=0.001)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10, verbose=True)
 
 X_train_tensor = torch.FloatTensor(X_resampled).to(device)
 y_train_tensor = torch.LongTensor(y_resampled).to(device)
@@ -57,6 +64,8 @@ for epoch in range(num_epochs):
     loss = criterion(outputs, y_train_tensor)
     loss.backward()
     optimizer.step()
+
+    scheduler.step(loss)
 
     if (epoch + 1) % 100 == 0:
         print(f"Epoch: {epoch + 1}, Loss: {loss.item()}")

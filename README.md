@@ -224,19 +224,33 @@ Za pomocą skryptu `transform_sessions.py` dane zostały przeformatowane do upro
 
 
 ### Opis budowy modeli
-- Są to modele złożone z  3 warstw
+#### Budowa modelu Simple
+- Model złożony z  3 warstw
   - Pierwsza warstwa: 50 neuronów, Funkcja aktywacji: ReLU
   - Druga warstwa: 30 neuronów, Funkcja aktywacji: ReLU
   - Trzecia warstwa: 2 neurony
 - CrossEntropyLoss i optimizer Adam
 - 1000 epok
 
+#### Budowa modelu Advanced
+- Model złożony z 4 warstw
+  - Pierwsza warstwa: 100 neuronów, Funkcja aktywacji: ReLU
+  - Dropout z prawdopodobieństwem 0.5
+  - Druga warstwa: 50 neuronów, Funkcja aktywacji: ReLU
+  - Dropout z prawdopodobieństwem 0.5
+  - Trzecia warstwa: 30 neuronów, Funkcja aktywacji: ReLU
+  - Czwarta warstwa: 2 neurony
+- CrossEntropyLoss i optimizer Adam
+- scheduler ReduceLROnPlateau
+- 1000 epok
+
+
 ## Modele
 ### Simple
 Przewiduje czy utwór zostanie pominięty czy nie tylko na podstawie favourite_genres użytkownika i genres utworu
 
 ### Advanced
-Przewiduje czy utwór zostanie pomięty czy nie na podstawie favourite_genres użytkownika, genres utworu oraz dodatkowych informacji.
+Przewiduje czy utwór zostanie pomięty czy nie na podstawie favourite_genres użytkownika, genres utworu oraz dodatkowych informacji o utworze.
 
 TODO KORNEL DODAĆ WIĘCEJ ATRYBUTÓW OPRÓCZ DURATION_MS
 

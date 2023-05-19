@@ -210,7 +210,7 @@ Większość innych atrybutów nie niesie wiele informacji i nie wpływa w znacz
 
 ### Proces budowy modelów
 #### Przygotowanie danych
-Za pomocą skryptu `transform_sessions.py` dane zostały przeformatowane do uproszczonej postaci. Zawiera ona etykietę mówiącą o tym czy utwór został pominięty, czy nie
+Za pomocą skryptu `transformation/transform_sessions.py` dane zostały przeformatowane do uproszczonej postaci. Zawiera ona etykietę mówiącą o tym czy utwór został pominięty, czy nie
 #### Etapy przygotowania danych do trenowania
 - Wczytanie danych z plików wejściowych
 - Łączenie danych w jeden duży zestaw danych
@@ -244,6 +244,15 @@ Za pomocą skryptu `transform_sessions.py` dane zostały przeformatowane do upro
 - scheduler ReduceLROnPlateau
 - 1000 epok
 
+### Uruchomienie trenowania
+Wszystkie kroki trenowania można wykonać używając jednego skryptu:
+```bash
+DATA_VERSION=<data_version> CUDA_USE_GPU=<cuda_use_gpu> ./prepare_models.sh
+```
+gdzie:
+- `data_version` - wersja danych wejściowych (domyślnie `v2`)
+- `cuda_use_gpu` - czy używać GPU (`0` lub `1` - domyślnie `1`)
+
 
 ## Modele
 ### Simple
@@ -252,23 +261,40 @@ Przewiduje czy utwór zostanie pominięty czy nie tylko na podstawie favourite_g
 ### Advanced
 Przewiduje czy utwór zostanie pomięty czy nie na podstawie favourite_genres użytkownika, genres utworu oraz dodatkowych informacji o utworze.
 
-TODO KORNEL DODAĆ WIĘCEJ ATRYBUTÓW OPRÓCZ DURATION_MS
-
 
 ### Porównanie modeli
-TODO KORNEL OBLICZYĆ ACCURACY jednego i drugiego modelu i napisać
+#### Dane v2:
+- Simple: `70.74%`
+- Advanced: `73.27%`
 
+#### Dane v3:
+- Simple: `63.49%`
+- Advanced: `62.23%`
 
 
 #### Inne próby
 ##### RandomForest i GradientBoosting
 Próby z wykorzystaniem RandomForest i GradientBoosting nie przyniosły zadowalających rezultatów. Ponieważ wykorzystywane trenowanie na CPU ich trenowanie trwało dużo dłużej
 
-
 ## Mikroserwis
 Mikroserwis został zaimplementowany w języku Python z wykorzystaniem FastAPI. Jest on udostępniony jako obraz Dockerowy.
 
+#### Uruchomienie mikroserwisu
+Aby uruchomić mikroserwis, należy skopiować plik `.env.example` do `.env` i uzupełnić go odpowiednimi wartościami.
+```bash
+cp .env.example .env
+```
+Następnie należy zbudować obraz Dockerowy i uruchomić go:
+```bash
+docker-compose up -d --build
+```
+
 ### Endpointy
+
+#### Lista modeli
+`GET /api/models`
+
+Zwraca dostępne modele (`simple` i `advanced`)
 
 #### Predykcja z wykorzystaniem konkretnej wersji modelu
 `POST /api/predict/{model_name}`, gdzie model_name `simple` lub `advanced`

@@ -1,3 +1,4 @@
+import os
 import pickle
 
 import torch
@@ -5,8 +6,19 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import accuracy_score
 
-MODEL_ROOT = '../../../model/advanced/'
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+DATA_ROOT = f'./data/input_data/{os.getenv("DATA_VERSION", "v2")}/'
+MODEL_ROOT = './data/models/advanced/'
+
+USE_GPU = int(os.getenv('CUDA_USE_GPU', "1"))
+
+if USE_GPU:
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    else:
+        print("CUDA on GPU is not available, using CPU as fallback")
+        device = torch.device("cpu")
+else:
+    device = torch.device("cpu")
 
 # Load the data
 with open(MODEL_ROOT + 'resampled_train_features.pkl', 'rb') as f:

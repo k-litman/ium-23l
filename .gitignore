@@ -133,3 +133,11 @@ model/
 
 *.pkl
 *.pth
+
+.idea/
+
+db/
+data/models/
+data/input_data/v3
+
+torch

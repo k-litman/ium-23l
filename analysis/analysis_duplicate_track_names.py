@@ -1,7 +1,7 @@
 import json
 
 
-DATA_ROOT = '../data/v2/'
+DATA_ROOT = './data/input_data/v2/'
 
 duplicates = dict()
 

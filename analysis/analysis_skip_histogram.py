@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 
-DATA_ROOT = '../data/v2/'
+DATA_ROOT = './data/input_data/v2/'
 
 
 def calculate_skip_time_differences(data):

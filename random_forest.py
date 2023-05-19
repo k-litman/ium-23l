@@ -4,7 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-DATA_ROOT = 'data/v2/'
+DATA_ROOT = './data/input_data/v2/'
 
 
 def read_jsonl(file_path):

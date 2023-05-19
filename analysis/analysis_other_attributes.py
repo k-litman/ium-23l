@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import json
 
-DATA_ROOT = '../data/v2/'
+DATA_ROOT = '../data/input_data/v2/'
 
 with open(DATA_ROOT + 'tracks.jsonl') as f:
     tracks = [json.loads(line) for line in f]

@@ -2,7 +2,7 @@ import pandas as pd
 import json
 
 # For artists.jsonl similar code for other files
-with open("../data/v2/tracks.jsonl", "r") as file:
+with open("./data/input_data/tracks.jsonl", "r") as file:
     lines = file.readlines()
 
 artists_data = [json.loads(line) for line in lines]

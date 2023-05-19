@@ -1,3 +1,4 @@
+import os
 import pickle
 
 import jsonlines
@@ -12,8 +13,8 @@ from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
 
 from utils_advanced import map_genre
 
-DATA_ROOT = '../../../data/v2/'
-MODEL_ROOT = '../../../model/advanced/'
+DATA_ROOT = f'./data/input_data/{os.getenv("DATA_VERSION", "v2")}/'
+MODEL_ROOT = './data/models/advanced/'
 
 
 def load_data(file_path):

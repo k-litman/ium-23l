@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
 
-from app.models.common import PredictionHelper, AbstractMLPClassifier, tracks_df, track_storage_df, artists_df
+from app.models.common import PredictionHelper, AbstractMLPClassifier, tracks_df, track_storage_df, artists_df, map_genre
 
 from src.models.advanced.utils_advanced import map_genre
 

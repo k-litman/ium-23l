@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-DATA_ROOT = 'data/v2/'
+DATA_ROOT = './data/input_data/v2/'
 
 
 def read_jsonl(file_path):

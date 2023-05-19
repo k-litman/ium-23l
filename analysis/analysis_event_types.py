@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-DATA_ROOT = '../data/v2/'
+DATA_ROOT = './data/input_data/v2/'
 
 
 def load_sessions(file_path):

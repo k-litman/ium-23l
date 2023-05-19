@@ -1,8 +1,11 @@
 import json
+import os
 from datetime import datetime
 
-INPUT_FILE = '../data/v3/sessions.jsonl'
-OUTPUT_FILE = '../data/v3/sessions_transformed.jsonl'
+DATA_VERSION = os.getenv('DATA_VERSION', 'v2')
+
+INPUT_FILE = f'./data/input_data/{DATA_VERSION}/sessions.jsonl'
+OUTPUT_FILE = f'./data/input_data/{DATA_VERSION}/sessions_transformed.jsonl'
 
 with open(INPUT_FILE) as f:
     lines = f.readlines()

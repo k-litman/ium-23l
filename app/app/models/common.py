@@ -1,8 +1,11 @@
+from datetime import datetime
 import pickle
 from typing import Any, Type
 
+import numpy as np
 import pandas as pd
 import torch
+from scipy.sparse import issparse
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
 
 from abc import ABC, abstractmethod
@@ -10,10 +13,13 @@ from abc import ABC, abstractmethod
 from jsonlines import jsonlines
 import logging
 
-from app.models.advanced import AdvancedPredictionHelper
-from app.models.simple import SimplePredictionHelper
-from app.schema.dto.predict import PredictRequestDTO
-from app.settings import settings
+from app.database.operations import add_prediction
+from app.schema.database.predict import Prediction
+from app.schema.dto.predict import PredictRequest
+from app.settings import get_settings
+
+
+settings = get_settings()
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +36,7 @@ def read_jsonl(file_path):
 def get_device():
     if settings.cuda_use_gpu:
         if torch.cuda.is_available():
-            return torch.device("cuda")
+            return torch.device("cuda:0")
         else:
             logger.warning("CUDA on GPU is not available, using CPU as fallback")
             return torch.device("cpu")
@@ -38,9 +44,28 @@ def get_device():
         return torch.device("cpu")
 
 
-artists_df = read_jsonl(f"{settings.data_root}/input_data/{settings.data_version}/artists.jsons")
+artists_df = read_jsonl(f"{settings.data_root}/input_data/{settings.data_version}/artists.jsonl")
 track_storage_df = read_jsonl(f"{settings.data_root}/input_data/{settings.data_version}/track_storage.jsonl")
 tracks_df = read_jsonl(f"{settings.data_root}/input_data/{settings.data_version}/tracks.jsonl")
+
+
+def get_representative_genre(cluster, kmeans, clustered_genres):
+    centroid = kmeans.cluster_centers_[cluster]
+    points = np.array([point for _, point in clustered_genres[cluster]])
+
+    if issparse(points[0]):
+        points = np.array([point.toarray()[0] for point in points])
+
+    distances = np.linalg.norm(points - centroid, axis=1)
+    min_index = np.argmin(distances)
+
+    return clustered_genres[cluster][min_index][0]
+
+
+def map_genre(genre, genre_to_cluster, kmeans, clustered_genres):
+    cluster_label = genre_to_cluster[genre]
+    representative_genre = get_representative_genre(cluster_label, kmeans, clustered_genres)
+    return representative_genre
 
 
 class AbstractMLPClassifier(ABC, torch.nn.Module):
@@ -69,8 +94,10 @@ class PredictionHelper(ABC):
 
     def __new__(cls, model_name: str):
         if model_name == 'simple':
+            from app.models.simple import SimplePredictionHelper
             return super().__new__(SimplePredictionHelper)
         elif model_name == 'advanced':
+            from app.models.advanced import AdvancedPredictionHelper
             return super().__new__(AdvancedPredictionHelper)
         else:
             raise NotImplementedError(f"Unknown model name: {model_name}")
@@ -116,7 +143,7 @@ class PredictionHelper(ABC):
                            mlb_favourite_genres: MultiLabelBinarizer, scaler: StandardScaler):
         raise NotImplementedError
 
-    async def predict(self, request: PredictRequestDTO):
+    async def predict(self, request: PredictRequest):
         input_data = self.process_input(request.track_id, request.favourite_genres, self.mlb_genres, self.mlb_favourite_genres, self.scaler)
         tensor = torch.tensor(input_data, dtype=torch.float).to(get_device())
 
@@ -125,6 +152,17 @@ class PredictionHelper(ABC):
             prediction = torch.round(torch.sigmoid(output[0][0])).item()
 
         return prediction
+
+    async def save_prediction(self, request: PredictRequest, result):
+        prediction = Prediction(
+            model=self.model_path,
+            track_id=request.track_id,
+            favourite_genres=request.favourite_genres,
+            result=bool(result),
+            when=datetime.now()
+        )
+
+        await add_prediction(prediction)
 
 
 

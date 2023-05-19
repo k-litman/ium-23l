@@ -3,23 +3,26 @@ version: '3.7'
 services:
   db:
     image: mongo
-    env_file:
-      - .env
     ports:
       - "27017:27017"
     volumes:
-      - ./db:/data/db
-    network_mode: host
+        - ./db/db:/data/db
+        - ./db/configdb:/data/configdb
+    env_file:
+      - .env
   app:
     build:
       context: .
+      network: host
       dockerfile: docker/Dockerfile
     env_file:
       - .env
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-    network_mode: host
+      - ./app:/app
+      - ./data:/data
     depends_on:
       - db
+
+

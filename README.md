@@ -271,7 +271,7 @@ Mikroserwis został zaimplementowany w języku Python z wykorzystaniem FastAPI. 
 ### Endpointy
 
 #### Predykcja z wykorzystaniem konkretnej wersji modelu
-`POST /models/{model_name}/predict`, gdzie model_name `simple` lub `advanced`
+`POST /predict/{model_name}`, gdzie model_name `simple` lub `advanced`
 
 Przykładowe request body:
 ```json
@@ -290,7 +290,7 @@ Przykładowy response:
 ```
 
 #### Predykcja z wykorzystaniem losowej wersji modelu do przeprowadzenia testów A/B
-`POST /models/predict`
+`POST /predict/random`
 Informacje o predykcji są zapisane do dokumentowej bazy danych MongoDB.
 Dane te mogą posłużyć do późniejszej oceny jakości modeli.
 
